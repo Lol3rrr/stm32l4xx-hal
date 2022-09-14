@@ -15,7 +15,7 @@ use crate::{
     gpio::{self, Analog},
     hal::{
         adc::{Channel as EmbeddedHalChannel, OneShot},
-        blocking::delay::DelayUs,
+        delay::blocking::DelayUs,
     },
     pac::{self, ADC1},
     rcc::{Enable, Reset, AHB2, CCIPR},

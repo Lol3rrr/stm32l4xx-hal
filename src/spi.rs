@@ -14,7 +14,7 @@ use crate::dma::dma2;
 use crate::dma::{self, dma1, TransferPayload};
 use crate::dmamux::{DmaInput, DmaMux};
 use crate::gpio::{Alternate, PushPull};
-use crate::hal::spi::{FullDuplex, Mode, Phase, Polarity};
+use crate::hal::spi::{nb::FullDuplex, Mode, Phase, Polarity};
 use crate::rcc::{Clocks, Enable, RccBus, Reset};
 use crate::time::Hertz;
 
@@ -30,6 +30,16 @@ pub enum Error {
     ModeFault,
     /// CRC error
     Crc,
+}
+
+impl embedded_hal::spi::Error for Error {
+    fn kind(&self) -> embedded_hal::spi::ErrorKind {
+        match self {
+            Self::Overrun => embedded_hal::spi::ErrorKind::Overrun,
+            Self::ModeFault => embedded_hal::spi::ErrorKind::ModeFault,
+            Self::Crc => embedded_hal::spi::ErrorKind::Other,
+        }
+    }
 }
 
 #[doc(hidden)]
@@ -234,9 +244,11 @@ macro_rules! hal {
                 }
             }
 
-            impl<PINS> FullDuplex<u8> for Spi<$SPIX, PINS> {
+            impl<PINS> embedded_hal::spi::ErrorType for Spi<$SPIX, PINS> {
                 type Error = Error;
+            }
 
+            impl<PINS> FullDuplex<u8> for Spi<$SPIX, PINS> {
                 fn read(&mut self) -> nb::Result<u8, Error> {
                     let sr = self.spi.sr.read();
 
@@ -257,7 +269,7 @@ macro_rules! hal {
                     })
                 }
 
-                fn send(&mut self, byte: u8) -> nb::Result<(), Error> {
+                fn write(&mut self, byte: u8) -> nb::Result<(), Error> {
                     let sr = self.spi.sr.read();
 
                     Err(if sr.ovr().bit_is_set() {
@@ -275,10 +287,6 @@ macro_rules! hal {
                     })
                 }
             }
-
-            impl<PINS> crate::hal::blocking::spi::transfer::Default<u8> for Spi<$SPIX, PINS> {}
-
-            impl<PINS> crate::hal::blocking::spi::write::Default<u8> for Spi<$SPIX, PINS> {}
         )+
     }
 }
