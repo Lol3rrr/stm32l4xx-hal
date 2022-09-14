@@ -122,18 +122,18 @@ pub use crate::pac as stm32;
 pub mod traits;
 
 #[cfg(not(any(feature = "stm32l4r9", feature = "stm32l4s9",)))]
-pub mod adc;
+//pub mod adc;
 #[cfg(not(any(feature = "stm32l4r9", feature = "stm32l4s9",)))]
 #[cfg(not(any(feature = "stm32l412",)))]
-pub mod can;
-pub mod crc;
-pub mod delay;
+//pub mod can;
+//pub mod crc;
+//pub mod delay;
 pub mod dma;
 pub mod dmamux;
 pub mod flash;
 pub mod gpio;
-pub mod i2c;
-pub mod lptimer;
+//pub mod i2c;
+//pub mod lptimer;
 #[cfg(all(
     feature = "otg_fs",
     any(
@@ -144,9 +144,9 @@ pub mod lptimer;
         feature = "stm32l4a6",
     )
 ))]
-pub mod otg_fs;
+//pub mod otg_fs;
 pub mod prelude;
-pub mod pwm;
+//pub mod pwm;
 pub mod pwr;
 #[cfg(not(any(
     feature = "stm32l433",
@@ -154,16 +154,16 @@ pub mod pwr;
     feature = "stm32l4r9",
     feature = "stm32l4s9",
 )))]
-pub mod qspi;
+//pub mod qspi;
 pub mod rcc;
-pub mod rng;
-pub mod rtc;
+//pub mod rng;
+//pub mod rtc;
 pub mod serial;
-pub mod signature;
-pub mod spi;
+//pub mod signature;
+//pub mod spi;
 pub mod time;
-pub mod timer;
-pub mod tsc;
+//pub mod timer;
+//pub mod tsc;
 #[cfg(all(
     feature = "stm32-usbd",
     any(
@@ -178,7 +178,7 @@ pub mod tsc;
     )
 ))]
 pub mod usb;
-pub mod watchdog;
+//pub mod watchdog;
 
 mod sealed {
     pub trait Sealed {}

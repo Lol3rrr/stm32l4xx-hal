@@ -1,7 +1,10 @@
 //! General Purpose Input / Output
 
-pub use crate::hal::digital::v2::PinState;
-use crate::hal::digital::v2::{InputPin, OutputPin, StatefulOutputPin, ToggleableOutputPin};
+pub use crate::hal::digital::PinState;
+use crate::hal::digital::{
+    self,
+    blocking::{InputPin, OutputPin, StatefulOutputPin, ToggleableOutputPin},
+};
 use core::convert::Infallible;
 use core::marker::PhantomData;
 
@@ -509,8 +512,10 @@ impl<MODE, HL, const P: char, const N: u8> Pin<Output<MODE>, HL, P, N> {
     }
 }
 
-impl<MODE, HL, const P: char, const N: u8> OutputPin for Pin<Output<MODE>, HL, P, N> {
+impl<MODE, HL, const P: char, const N: u8> digital::ErrorType for Pin<Output<MODE>, HL, P, N> {
     type Error = Infallible;
+}
+impl<MODE, HL, const P: char, const N: u8> OutputPin for Pin<Output<MODE>, HL, P, N> {
     #[inline]
     fn set_high(&mut self) -> Result<(), Self::Error> {
         self.set_high();
@@ -535,8 +540,6 @@ impl<MODE, HL, const P: char, const N: u8> StatefulOutputPin for Pin<Output<MODE
 }
 
 impl<MODE, HL, const P: char, const N: u8> ToggleableOutputPin for Pin<Output<MODE>, HL, P, N> {
-    type Error = Infallible;
-
     #[inline(always)]
     fn toggle(&mut self) -> Result<(), Self::Error> {
         self.toggle();
@@ -555,8 +558,10 @@ impl<MODE, HL, const P: char, const N: u8> Pin<Input<MODE>, HL, P, N> {
     }
 }
 
-impl<MODE, HL, const P: char, const N: u8> InputPin for Pin<Input<MODE>, HL, P, N> {
+impl<MODE, HL, const P: char, const N: u8> digital::ErrorType for Pin<Input<MODE>, HL, P, N> {
     type Error = Infallible;
+}
+impl<MODE, HL, const P: char, const N: u8> InputPin for Pin<Input<MODE>, HL, P, N> {
     #[inline]
     fn is_high(&self) -> Result<bool, Self::Error> {
         Ok(self.is_high())
@@ -580,7 +585,6 @@ impl<HL, const P: char, const N: u8> Pin<Output<OpenDrain>, HL, P, N> {
 }
 
 impl<HL, const P: char, const N: u8> InputPin for Pin<Output<OpenDrain>, HL, P, N> {
-    type Error = Infallible;
     #[inline]
     fn is_high(&self) -> Result<bool, Self::Error> {
         Ok(self.is_high())

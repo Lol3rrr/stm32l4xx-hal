@@ -99,7 +99,7 @@ impl<MODE> ErasedPin<Output<MODE>> {
 
     #[inline(always)]
     pub fn toggle(&mut self) {
-        if self.is_set_low() {
+        if self.is_set_low().unwrap_or(false) {
             self.set_high()
         } else {
             self.set_low()
@@ -107,9 +107,10 @@ impl<MODE> ErasedPin<Output<MODE>> {
     }
 }
 
-impl<MODE> OutputPin for ErasedPin<Output<MODE>> {
+impl<MODE> digital::ErrorType for ErasedPin<Output<MODE>> {
     type Error = core::convert::Infallible;
-
+}
+impl<MODE> OutputPin for ErasedPin<Output<MODE>> {
     #[inline(always)]
     fn set_high(&mut self) -> Result<(), Self::Error> {
         self.set_high();
@@ -136,8 +137,6 @@ impl<MODE> StatefulOutputPin for ErasedPin<Output<MODE>> {
 }
 
 impl<MODE> ToggleableOutputPin for ErasedPin<Output<MODE>> {
-    type Error = Infallible;
-
     #[inline(always)]
     fn toggle(&mut self) -> Result<(), Self::Error> {
         self.toggle();
@@ -158,8 +157,6 @@ impl ErasedPin<Output<OpenDrain>> {
 }
 
 impl InputPin for ErasedPin<Output<OpenDrain>> {
-    type Error = core::convert::Infallible;
-
     #[inline(always)]
     fn is_high(&self) -> Result<bool, Self::Error> {
         Ok(self.is_high())
@@ -183,9 +180,10 @@ impl<MODE> ErasedPin<Input<MODE>> {
     }
 }
 
-impl<MODE> InputPin for ErasedPin<Input<MODE>> {
+impl<MODE> digital::ErrorType for ErasedPin<Input<MODE>> {
     type Error = core::convert::Infallible;
-
+}
+impl<MODE> InputPin for ErasedPin<Input<MODE>> {
     #[inline(always)]
     fn is_high(&self) -> Result<bool, Self::Error> {
         Ok(self.is_high())

@@ -10,7 +10,10 @@ use core::sync::atomic::{self, Ordering};
 use embedded_dma::StaticWriteBuffer;
 use stable_deref_trait::StableDeref;
 
-use crate::hal::serial::{self, Write};
+use crate::hal::serial::{
+    self,
+    nb::{Read, Write},
+};
 
 use crate::dma::{
     dma1, CircBuffer, DMAFrame, FrameReader, FrameSender, Receive, RxDma, TransferPayload,
@@ -70,6 +73,17 @@ pub enum Error {
     Overrun,
     /// Parity check error
     Parity,
+}
+
+impl serial::Error for Error {
+    fn kind(&self) -> serial::ErrorKind {
+        match self {
+            Self::Framing => serial::ErrorKind::Other,
+            Self::Noise => serial::ErrorKind::Noise,
+            Self::Overrun => serial::ErrorKind::Overrun,
+            Self::Parity => serial::ErrorKind::Parity,
+        }
+    }
 }
 
 /// USART parity settings
@@ -445,9 +459,11 @@ macro_rules! hal {
                 }
             }
 
-            impl<PINS> serial::Read<u8> for Serial<pac::$USARTX, PINS> {
+            impl<PINS> serial::ErrorType for Serial<pac::$USARTX, PINS> {
                 type Error = Error;
+            }
 
+            impl<PINS> Read<u8> for Serial<pac::$USARTX, PINS> {
                 fn read(&mut self) -> nb::Result<u8, Error> {
                     let mut rx: Rx<pac::$USARTX> = Rx {
                         _usart: PhantomData,
@@ -456,9 +472,11 @@ macro_rules! hal {
                 }
             }
 
-            impl serial::Read<u8> for Rx<pac::$USARTX> {
+            impl serial::ErrorType for Rx<pac::$USARTX> {
                 type Error = Error;
+            }
 
+            impl Read<u8> for Rx<pac::$USARTX> {
                 fn read(&mut self) -> nb::Result<u8, Error> {
                     self.check_for_error()?;
 
@@ -476,9 +494,7 @@ macro_rules! hal {
                 }
             }
 
-            impl<PINS> serial::Write<u8> for Serial<pac::$USARTX, PINS> {
-                type Error = Error;
-
+            impl<PINS> Write<u8> for Serial<pac::$USARTX, PINS> {
                 fn flush(&mut self) -> nb::Result<(), Error> {
                     let mut tx: Tx<pac::$USARTX> = Tx {
                         _usart: PhantomData,
@@ -494,13 +510,15 @@ macro_rules! hal {
                 }
             }
 
-            impl serial::Write<u8> for Tx<pac::$USARTX> {
+            impl serial::ErrorType for Tx<pac::$USARTX> {
                 // NOTE(Void) See section "29.7 USART interrupts"; the only possible errors during
                 // transmission are: clear to send (which is disabled in this case) errors and
                 // framing errors (which only occur in SmartCard mode); neither of these apply to
                 // our hardware configuration
                 type Error = Error;
+            }
 
+            impl Write<u8> for Tx<pac::$USARTX> {
                 fn flush(&mut self) -> nb::Result<(), Error> {
                     // NOTE(unsafe) atomic read with no side effects
                     let isr = unsafe { (*pac::$USARTX::ptr()).isr.read() };
@@ -529,8 +547,9 @@ macro_rules! hal {
                 }
             }
 
-            impl embedded_hal::blocking::serial::write::Default<u8>
-                for Tx<pac::$USARTX> {}
+            // TODO
+            // impl embedded_hal::serial::blocking::write::Default<u8>
+            //     for Tx<pac::$USARTX> {}
 
             pub type $rxdma = RxDma<Rx<pac::$USARTX>, $dmarxch>;
             pub type $txdma = TxDma<Tx<pac::$USARTX>, $dmatxch>;
@@ -903,7 +922,7 @@ hal! {
 
 impl<USART, PINS> fmt::Write for Serial<USART, PINS>
 where
-    Serial<USART, PINS>: crate::hal::serial::Write<u8>,
+    Serial<USART, PINS>: crate::hal::serial::nb::Write<u8>,
 {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         let _ = s
@@ -917,7 +936,7 @@ where
 
 impl<USART> fmt::Write for Tx<USART>
 where
-    Tx<USART>: crate::hal::serial::Write<u8>,
+    Tx<USART>: crate::hal::serial::nb::Write<u8>,
 {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         let _ = s
