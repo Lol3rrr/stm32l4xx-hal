@@ -144,7 +144,7 @@ pub mod gpio;
         feature = "stm32l4a6",
     )
 ))]
-//pub mod otg_fs;
+pub mod otg_fs;
 pub mod prelude;
 //pub mod pwm;
 pub mod pwr;
